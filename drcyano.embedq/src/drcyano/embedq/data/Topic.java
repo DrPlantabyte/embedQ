@@ -1,6 +1,5 @@
 package drcyano.embedq.data;
 
-import java.util.IllegalFormatException;
 
 public class Topic implements Cloneable {
 	
