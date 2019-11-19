@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 public class SimpleBroker extends Broker {
 	
 	@Override public IntraprocessBrokerConnection getConnection(){
-		throw new UnsupportedOperationException("Not implemented yet!");
+		return new IntraprocessBrokerConnection(this);
 	}
 	
 	@Override

@@ -10,7 +10,7 @@ import drcyano.embedq.data.Topic;
 public class IntraprocessBrokerConnection extends BrokerConnection {
 	private final Broker broker;
 	
-	private IntraprocessBrokerConnection(Broker host){
+	public IntraprocessBrokerConnection(Broker host){
 		this.broker = host;
 	}
 	

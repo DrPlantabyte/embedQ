@@ -8,9 +8,7 @@ import drcyano.embedq.data.Topic;
 import java.nio.ByteBuffer;
 
 public abstract class Broker {
-	public BrokerConnection getConnection() {
-		throw new UnsupportedOperationException("Not implemented yet!");
-	}
+	public abstract BrokerConnection getConnection();
 	
 	public abstract void receivePayload(Payload payload) ;
 	
