@@ -20,10 +20,6 @@ public class PayloadManager {
 		throw new UnsupportedOperationException("Not implemented yet!");
 	}
 	
-	public static PayloadType decodeType(Payload payload) {
-		throw new UnsupportedOperationException("Not implemented yet!");
-	}
-	
 	public static SubscribeEvent decodeSubscribeEvent(Payload payload) {
 		throw new UnsupportedOperationException("Not implemented yet!");
 	}

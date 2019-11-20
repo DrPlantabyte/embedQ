@@ -20,7 +20,7 @@ public class SimpleBroker extends Broker {
 	
 	@Override
 	public void receivePayload(Payload payload) {
-		PayloadType type = PayloadManager.decodeType(payload);
+		PayloadType type = payload.getType();
 		switch (type){
 			case SUBSCRIBE:{
 				SubscribeEvent subEvent = PayloadManager.decodeSubscribeEvent(payload);
