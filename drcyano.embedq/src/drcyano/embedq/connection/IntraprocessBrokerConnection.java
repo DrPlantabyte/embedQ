@@ -17,7 +17,6 @@ public class IntraprocessBrokerConnection extends BrokerConnection {
 	@Override public void subscribe(Subscriber sub, Topic topic) {
 		Payload p = PayloadManager.encodeSubscribeEvent(sub, topic);
 		broker.receivePayload(p);
-		throw new UnsupportedOperationException("Not implemented yet!");
 	}
 	
 	@Override public void publish(Message m, Topic topic){
