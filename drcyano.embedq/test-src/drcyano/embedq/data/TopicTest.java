@@ -47,26 +47,26 @@ public class TopicTest {
 		assertThrows(InvalidTopicStringException.class,()-> new Topic("a/#/d"));
 		Topic azd = new Topic("a/+/d");
 		Topic azc = new Topic("a/+/c");
-		assertFalse(Topic.matchPublisherToSubscriber(abcd, abed));
-		assertTrue(Topic.matchPublisherToSubscriber(abcd, abcd2));
-		assertFalse(Topic.matchPublisherToSubscriber(abcd, afd));
-		assertTrue(Topic.matchPublisherToSubscriber(abcd, abzd));
-		assertTrue(Topic.matchPublisherToSubscriber(abzd, abcd));
-		assertFalse(Topic.matchPublisherToSubscriber(abcd, azd));
-		assertFalse(Topic.matchPublisherToSubscriber(azd, abcd));
-		assertTrue(Topic.matchPublisherToSubscriber(azd, afd));
-		assertTrue(Topic.matchPublisherToSubscriber(afd, azd));
-		assertFalse(Topic.matchPublisherToSubscriber(abzd,azd));
-		assertFalse(Topic.matchPublisherToSubscriber(azd, abzd));
-		assertFalse(Topic.matchPublisherToSubscriber(abc, abcd));
-		assertFalse(Topic.matchPublisherToSubscriber(abcd, abc));
-		assertTrue(Topic.matchPublisherToSubscriber(abc, azc));
-		assertFalse(Topic.matchPublisherToSubscriber(abc, abc_));
-		assertTrue(Topic.matchPublisherToSubscriber(abc, ab_));
-		assertTrue(Topic.matchPublisherToSubscriber(abcd, ab_));
-		assertFalse(Topic.matchPublisherToSubscriber(abc, abcz));
-		assertTrue(Topic.matchPublisherToSubscriber(abc, abz));
-		assertFalse(Topic.matchPublisherToSubscriber(abcd, abz));
+		assertFalse(Topic.matches(abcd, abed));
+		assertTrue(Topic.matches(abcd, abcd2));
+		assertFalse(Topic.matches(abcd, afd));
+		assertTrue(Topic.matches(abcd, abzd));
+		assertTrue(Topic.matches(abzd, abcd));
+		assertFalse(Topic.matches(abcd, azd));
+		assertFalse(Topic.matches(azd, abcd));
+		assertTrue(Topic.matches(azd, afd));
+		assertTrue(Topic.matches(afd, azd));
+		assertFalse(Topic.matches(abzd,azd));
+		assertFalse(Topic.matches(azd, abzd));
+		assertFalse(Topic.matches(abc, abcd));
+		assertFalse(Topic.matches(abcd, abc));
+		assertTrue(Topic.matches(abc, azc));
+		assertFalse(Topic.matches(abc, abc_));
+		assertTrue(Topic.matches(abc, ab_));
+		assertTrue(Topic.matches(abcd, ab_));
+		assertFalse(Topic.matches(abc, abcz));
+		assertTrue(Topic.matches(abc, abz));
+		assertFalse(Topic.matches(abcd, abz));
 		
 	}
 	

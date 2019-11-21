@@ -11,8 +11,12 @@ import drcyano.embedq.connection.source.SourceConnection;
 import drcyano.embedq.data.Topic;
 
 import java.nio.ByteBuffer;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SimpleBroker extends Broker {
+	
+	private final Map<Topic, Set<SourceConnection>> subscribers = Collections.synchronizedMap(new HashMap<Topic, Set<SourceConnection>>());
 	
 	@Override public IntraprocessBrokerConnection getConnection(){
 		return new IntraprocessBrokerConnection(this);
@@ -46,7 +50,13 @@ public class SimpleBroker extends Broker {
 	
 	}
 	
-	protected void sendToSubscribers(Topic pubTopic, ByteBuffer messageBuffer) {
+	protected void sendToSubscribers(final Topic pubTopic, final ByteBuffer messageBuffer) {
+		subscribers
+				.keySet()
+				.stream()
+				.filter(pubTopic::matches)
+				.map(subscribers::get)
+				.forEach((SourceConnection sub)-> sub.sendMessage(messageBuffer));
 		throw new UnsupportedOperationException("Not implemented yet!");
 	}
 	

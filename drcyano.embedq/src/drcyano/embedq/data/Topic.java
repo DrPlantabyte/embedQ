@@ -61,7 +61,7 @@ public class Topic implements Cloneable {
 		return new Topic(this.topicString, false);
 	}
 	
-	public static boolean matchPublisherToSubscriber(Topic publisherTopic, Topic subscriberTopic){
+	public static boolean matches(Topic publisherTopic, Topic subscriberTopic){
 		// MQTT spec: # for any (.* regex) and + for any within one level of heirarcy (/.*/ regex)
 		final int levelLimit = Math.min(publisherTopic.levels.length, subscriberTopic.levels.length);
 		final String multiWild = "#";
@@ -79,6 +79,10 @@ public class Topic implements Cloneable {
 		// if levels are equal, and same number of them, then equal
 		return publisherTopic.levels.length == subscriberTopic.levels.length;
 		
+	}
+	
+	public final boolean matches(Topic other){
+		return Topic.matches(this,other);
 	}
 	
 	private static boolean compare(String a, String b){
