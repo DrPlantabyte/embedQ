@@ -10,12 +10,10 @@ import java.nio.ByteBuffer;
 public abstract class Broker {
 	public abstract BrokerConnection getConnection();
 	
-	public abstract void receivePayload(Payload payload) ;
+	public abstract void publishMessage(Topic pubTopic, ByteBuffer messageBuffer);
 	
-	protected abstract void sendToSubscribers(Topic pubTopic, ByteBuffer messageBuffer);
+	public abstract  void addSubscription(SourceConnection sourceConnection, Topic topic);
 	
-	protected abstract  void addSubscription(SourceConnection sourceConnection, Topic topic);
-	
-	protected abstract  void removeSubscription(SourceConnection sourceConnection, Topic topic);
+	public abstract  void removeSubscription(SourceConnection sourceConnection, Topic topic);
 	
 }

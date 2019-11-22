@@ -12,8 +12,6 @@ import drcyano.embedq.data.Topic;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class SimpleBroker extends Broker {
 	
@@ -22,7 +20,7 @@ public class SimpleBroker extends Broker {
 	@Override public IntraprocessBrokerConnection getConnection(){
 		return new IntraprocessBrokerConnection(this);
 	}
-	
+	/*
 	@Override
 	public void receivePayload(Payload payload) {
 		PayloadType type = payload.getType();
@@ -47,11 +45,10 @@ public class SimpleBroker extends Broker {
 			default:
 				throw new IllegalStateException("Unexpected payload type: "+type.name());
 		}
-		throw new UnsupportedOperationException("Not implemented yet!");
 	
-	}
+	}*/
 	
-	protected synchronized void sendToSubscribers(final Topic pubTopic, final ByteBuffer messageBuffer) {
+	@Override public synchronized void publishMessage(final Topic pubTopic, final ByteBuffer messageBuffer) {
 		subscribers
 				.keySet()
 				.stream()
@@ -62,7 +59,7 @@ public class SimpleBroker extends Broker {
 								.forEach((SourceConnection sub)->sub.sendMessage(messageBuffer)));
 	}
 	
-	protected synchronized void addSubscription(SourceConnection sourceConnection, Topic topic) {
+	@Override public synchronized void addSubscription(SourceConnection sourceConnection, Topic topic) {
 		Set<SourceConnection> set;
 		if(subscribers.containsKey(topic) == false){
 			set = subscribers.put(topic, new HashSet<SourceConnection>());
@@ -71,7 +68,7 @@ public class SimpleBroker extends Broker {
 		}
 		set.add(sourceConnection);
 	}
-	protected synchronized void removeSubscription(SourceConnection sourceConnection, Topic topic) {
+	@Override public synchronized void removeSubscription(SourceConnection sourceConnection, Topic topic) {
 		if(subscribers.containsKey(topic)){
 			subscribers.get(topic).remove(sourceConnection);
 		}
