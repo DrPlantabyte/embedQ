@@ -4,4 +4,6 @@ import java.nio.ByteBuffer;
 
 public abstract class SourceConnection {
 	public abstract void sendMessage(ByteBuffer msg);
+	
+	@Override public int 
 }

@@ -12,6 +12,7 @@ import drcyano.embedq.data.Topic;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class SimpleBroker extends Broker {
@@ -50,20 +51,30 @@ public class SimpleBroker extends Broker {
 	
 	}
 	
-	protected void sendToSubscribers(final Topic pubTopic, final ByteBuffer messageBuffer) {
+	protected synchronized void sendToSubscribers(final Topic pubTopic, final ByteBuffer messageBuffer) {
 		subscribers
 				.keySet()
 				.stream()
 				.filter(pubTopic::matches)
 				.map(subscribers::get)
-				.forEach((SourceConnection sub)-> sub.sendMessage(messageBuffer));
-		throw new UnsupportedOperationException("Not implemented yet!");
+				.forEach((Set<SourceConnection> set)->
+						set.stream()
+								.forEach((SourceConnection sub)->sub.sendMessage(messageBuffer)));
 	}
 	
-	protected void addSubscription(SourceConnection sourceConnection, Topic topic) {
-		throw new UnsupportedOperationException("Not implemented yet!");
+	protected synchronized void addSubscription(SourceConnection sourceConnection, Topic topic) {
+		Set<SourceConnection> set;
+		if(subscribers.containsKey(topic) == false){
+			set = subscribers.put(topic, new HashSet<SourceConnection>());
+		} else {
+			set = subscribers.get(topic);
+		}
+		set.add(sourceConnection);
 	}
-	protected void removeSubscription(SourceConnection sourceConnection, Topic topic) {
-		throw new UnsupportedOperationException("Not implemented yet!");
+	protected synchronized void removeSubscription(SourceConnection sourceConnection, Topic topic) {
+		if(subscribers.containsKey(topic)){
+			subscribers.get(topic).remove(sourceConnection);
+		}
 	}
+	
 }
