@@ -1,5 +1,6 @@
 package drcyano.embedq.data;
 
+import drcyano.embedq.exceptions.InvalidTopicStringException;
 import org.junit.Test;
 
 

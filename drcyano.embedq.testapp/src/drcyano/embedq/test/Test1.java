@@ -3,7 +3,6 @@ package drcyano.embedq.test;
 import drcyano.embedq.broker.Broker;
 import drcyano.embedq.broker.SimpleBroker;
 import drcyano.embedq.connection.BrokerConnection;
-import drcyano.embedq.connection.IntraprocessBrokerConnection;
 import drcyano.embedq.client.Subscriber;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;

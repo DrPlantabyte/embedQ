@@ -1,11 +1,11 @@
-package drcyano.embedq.connection;
+package drcyano.embedq.imp;
 
 import drcyano.embedq.client.Subscriber;
+import drcyano.embedq.connection.BrokerConnection;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
 
 import java.net.InetAddress;
-import java.net.SocketAddress;
 
 public class NetworkBrokerConnection extends BrokerConnection {
 	

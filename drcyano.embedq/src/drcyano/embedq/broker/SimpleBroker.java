@@ -1,23 +1,21 @@
 package drcyano.embedq.broker;
 
-import drcyano.embedq.communication.Payload;
-import drcyano.embedq.communication.PayloadManager;
-import drcyano.embedq.communication.PayloadType;
-import drcyano.embedq.communication.events.PublishEvent;
-import drcyano.embedq.communication.events.SubscribeEvent;
-import drcyano.embedq.communication.events.UnsubscribeEvent;
-import drcyano.embedq.connection.IntraprocessBrokerConnection;
+import drcyano.embedq.connection.BrokerConnection;
 import drcyano.embedq.connection.source.SourceConnection;
+import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
+import drcyano.embedq.imp.IntraprocessBrokerConnection;
 
-import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SimpleBroker extends Broker {
 	
-	private final Map<Topic, Set<SourceConnection>> subscribers = Collections.synchronizedMap(new HashMap<Topic, Set<SourceConnection>>());
+	private final Map<Topic, Set<SourceConnection>> subscribers = new ConcurrentHashMap<Topic, Set<SourceConnection>>();
 	
-	@Override public IntraprocessBrokerConnection getConnection(){
+	@Override public BrokerConnection getConnection(){
 		return new IntraprocessBrokerConnection(this);
 	}
 	/*
@@ -48,7 +46,7 @@ public class SimpleBroker extends Broker {
 	
 	}*/
 	
-	@Override public synchronized void publishMessage(final Topic pubTopic, final ByteBuffer messageBuffer) {
+	@Override public void publishMessage(final Topic pubTopic, final Message messageBuffer) {
 		subscribers
 				.keySet()
 				.stream()
@@ -62,7 +60,8 @@ public class SimpleBroker extends Broker {
 	@Override public synchronized void addSubscription(SourceConnection sourceConnection, Topic topic) {
 		Set<SourceConnection> set;
 		if(subscribers.containsKey(topic) == false){
-			set = subscribers.put(topic, new HashSet<SourceConnection>());
+			set =  new HashSet<SourceConnection>();
+			subscribers.put(topic,set);
 		} else {
 			set = subscribers.get(topic);
 		}

@@ -1,6 +1,8 @@
 package drcyano.embedq.data;
 
 
+import drcyano.embedq.exceptions.InvalidTopicStringException;
+
 public class Topic implements Cloneable {
 	
 	private final String topicString;

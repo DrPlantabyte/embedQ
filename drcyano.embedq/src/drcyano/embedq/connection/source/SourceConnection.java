@@ -1,6 +1,6 @@
 package drcyano.embedq.connection.source;
 
-import java.nio.ByteBuffer;
+import drcyano.embedq.data.Message;
 
 public abstract class SourceConnection {
 	
@@ -10,7 +10,7 @@ public abstract class SourceConnection {
 		this.id = idString;
 	}
 	
-	public abstract void sendMessage(ByteBuffer msg);
+	public abstract void sendMessage(Message msg);
 	
 	@Override public int hashCode(){
 		return id.hashCode();

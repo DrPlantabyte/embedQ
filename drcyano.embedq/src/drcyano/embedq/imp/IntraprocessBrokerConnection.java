@@ -1,10 +1,8 @@
-package drcyano.embedq.connection;
+package drcyano.embedq.imp;
 
 import drcyano.embedq.broker.Broker;
 import drcyano.embedq.client.Subscriber;
-import drcyano.embedq.communication.Payload;
-import drcyano.embedq.communication.PayloadManager;
-import drcyano.embedq.connection.source.IntraprocessSourceConnection;
+import drcyano.embedq.connection.BrokerConnection;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
 
@@ -22,13 +20,12 @@ public class IntraprocessBrokerConnection extends BrokerConnection {
 	
 	@Override public void publish(Message m, Topic topic){
 		//Payload p = PayloadManager.encodePublishEvent(m, topic);
-		broker.publishMessage(topic, m.getBytes());
+		broker.publishMessage(topic, m);
 	}
 	
 	@Override
 	public void unsubscribe(Subscriber sub, Topic topic) {
-		//Payload p = PayloadManager.encodeUnsubscribeEvent(sub, topic);
-		broker.receivePayload(p);
+		broker.removeSubscription(new IntraprocessSourceConnection(sub), topic);
 	
 	}
 }

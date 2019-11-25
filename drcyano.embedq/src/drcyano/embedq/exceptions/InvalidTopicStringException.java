@@ -1,4 +1,4 @@
-package drcyano.embedq.data;
+package drcyano.embedq.exceptions;
 
 public class InvalidTopicStringException extends RuntimeException {
 	public InvalidTopicStringException(String message){
