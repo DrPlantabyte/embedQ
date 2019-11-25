@@ -1,4 +1,4 @@
-package drcyano.embedq.test;
+package testapp.embedq;
 
 import drcyano.embedq.broker.Broker;
 import drcyano.embedq.broker.SimpleBroker;

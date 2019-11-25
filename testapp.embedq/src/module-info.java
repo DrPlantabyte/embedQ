@@ -1,3 +1,3 @@
-module drcyano.embedq.testapp {
+module testapp.embedq {
 	requires drcyano.embedq;
 }
