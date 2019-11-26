@@ -39,8 +39,10 @@ public class Test1 {
 		Message m = Message.fromString("20.2C");
 		bc.publishReliable(m, new Topic("data/temperature"));
 		bc.publishReliable(Message.fromString("996.2hPa"), new Topic("data/pressure"));
-		bc.unsubscribe(s1);
+		bc.unsubscribeAll(s1);
 		bc.publishReliable(Message.fromString("20.4C"), new Topic("data/temperature"));
 		bc.publishReliable(Message.fromString("996.8hPa"), new Topic("data/pressure"));
+		bc.unsubscribe(s2,new Topic("#"));
+		bc.publishReliable(Message.fromString("996.0hPa"), new Topic("data/pressure"));
 	}
 }

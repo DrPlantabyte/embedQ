@@ -10,7 +10,7 @@ public class IntraprocessSourceConnection extends SourceConnection {
 	private final Subscriber src;
 	private static final AtomicInteger sequencer = new AtomicInteger(0);
 	public IntraprocessSourceConnection( Subscriber sub) {
-		super(String.format("%s#%s", IntraprocessSourceConnection.class.getSimpleName(), sequencer.incrementAndGet()));
+		super(String.format("%s:%s", IntraprocessSourceConnection.class.getSimpleName(), sequencer.incrementAndGet()));
 		this.src = sub;
 	}
 	
@@ -27,13 +27,14 @@ public class IntraprocessSourceConnection extends SourceConnection {
 		if (this == that) return true;
 		if(that instanceof IntraprocessSourceConnection){
 			IntraprocessSourceConnection other = (IntraprocessSourceConnection)that;
-			return isEqual(this.src, other.src);
+			return this.src == other.src;
 		} else {
 			return false;
 		}
 	}
 	
 	private static boolean isEqual(Object a, Object b){
+		if(a == b) return true;
 		if( a == null){
 			return b == null;
 		} else {

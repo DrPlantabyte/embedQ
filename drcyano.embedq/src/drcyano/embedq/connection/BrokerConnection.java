@@ -14,8 +14,5 @@ public abstract class BrokerConnection {
 	
 	public abstract void unsubscribe(Subscriber sub, Topic topic);
 	
-	public void unsubscribe(Subscriber sub) {
-		// unsubscribe from all topics
-		unsubscribe(sub, new Topic("#"));
-	}
+	public abstract void unsubscribeAll(Subscriber sub);
 }

@@ -69,7 +69,12 @@ public class SimpleBroker extends Broker {
 	}
 	@Override public synchronized void removeSubscription(SourceConnection sourceConnection, Topic topic) {
 		if(subscribers.containsKey(topic)){
-			subscribers.get(topic).remove(sourceConnection);
+			boolean removed = subscribers.get(topic).remove(sourceConnection);
+		}
+	}
+	@Override public synchronized void removeSubscriber(SourceConnection sourceConnection) {
+		for(Set<SourceConnection> channel : subscribers.values()){
+			channel.remove(sourceConnection);
 		}
 	}
 	

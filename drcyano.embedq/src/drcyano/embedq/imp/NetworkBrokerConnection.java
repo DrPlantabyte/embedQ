@@ -38,4 +38,10 @@ public class NetworkBrokerConnection extends BrokerConnection {
 		throw new UnsupportedOperationException("Not implemented yet!");
 	
 	}
+	
+	@Override
+	public void unsubscribeAll(Subscriber sub) {
+		throw new UnsupportedOperationException("Not implemented yet!");
+	
+	}
 }

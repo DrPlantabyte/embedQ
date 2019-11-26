@@ -14,4 +14,6 @@ public abstract class Broker {
 	
 	public abstract  void removeSubscription(SourceConnection sourceConnection, Topic topic);
 	
+	public abstract  void removeSubscriber(SourceConnection sourceConnection);
+	
 }

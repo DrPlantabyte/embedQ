@@ -28,4 +28,9 @@ public class IntraprocessBrokerConnection extends BrokerConnection {
 		broker.removeSubscription(new IntraprocessSourceConnection(sub), topic);
 	
 	}
+	
+	@Override
+	public void unsubscribeAll(Subscriber sub) {
+		broker.removeSubscriber(new IntraprocessSourceConnection(sub));
+	}
 }
