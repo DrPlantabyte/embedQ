@@ -2,6 +2,7 @@ package drcyano.embedq.data;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.nio.charset.Charset;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -64,6 +65,21 @@ public class Message {
 		InputStream in = new ByteArrayInputStream(m.getBytes().array());
 		GZIPInputStream decompressor = new GZIPInputStream(in);
 		return decompressor;
+	}
+	
+	public static Message fromInteger(int i) {
+		byte[] data = new byte[4];
+		int r = data.length;
+		for(int n = 0; n < data.length; n++){
+			r--;
+			// big-endian (aka network byte order)
+			data[n] = (byte)((i >> (8 * r)) & 0xFF);
+		}
+		return fromByteArray(data);
+	}
+	
+	public static String toString(Message m) {
+		return UTF8.decode(m.getBytes()).toString();
 	}
 	
 	public ByteBuffer getBytes() {

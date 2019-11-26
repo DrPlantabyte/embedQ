@@ -23,6 +23,10 @@ public class IntraprocessBrokerConnection extends BrokerConnection {
 		broker.publishMessage(topic, m);
 	}
 	
+	@Override public void publishFast(Message m, Topic topic){
+		publishReliable(m, topic);
+	}
+	
 	@Override
 	public void unsubscribe(Subscriber sub, Topic topic) {
 		broker.removeSubscription(new IntraprocessSourceConnection(sub), topic);
