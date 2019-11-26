@@ -18,7 +18,7 @@ public class IntraprocessBrokerConnection extends BrokerConnection {
 		broker.addSubscription(new IntraprocessSourceConnection(sub), topic);
 	}
 	
-	@Override public void publish(Message m, Topic topic){
+	@Override public void publishReliable(Message m, Topic topic){
 		//Payload p = PayloadManager.encodePublishEvent(m, topic);
 		broker.publishMessage(topic, m);
 	}
