@@ -24,6 +24,7 @@ public class Test2 {
 			protected void doWork(Message input, Publisher publisher) throws Exception {
 				int doughBalls = input.getBytes().getInt();
 				for(int i = 0; i < doughBalls; i++){
+					Thread.sleep(1000);
 					publisher.publishReliable(Message.fromString("Loaf of Bread"), new Topic("store/shelf"));
 				}
 			}
@@ -35,7 +36,18 @@ public class Test2 {
 			}
 		};
 		bc.subscribe(logger, new Topic("#"));
-		bc.publishReliable(Message.fromInteger(3), new Topic("kitchen/dough"));
+		
+		for(int i = 1; i <= 3; i++) {
+			bc.publishReliable(Message.fromInteger(i), new Topic("kitchen/dough"));
+		}
+		//
+		try {
+			Thread.sleep(10*1000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		System.exit(0);
 	}
+	
 	
 }
