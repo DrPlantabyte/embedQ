@@ -20,14 +20,14 @@ public class NetworkBrokerConnection extends BrokerConnection {
 	}
 	
 	@Override
-	public void publishReliable(Message m, Topic topic) {
+	public void publishReliable(Message m) {
 		// use TCP stream
 		throw new UnsupportedOperationException("Not implemented yet!");
 		
 	}
 	
 	@Override
-	public void publishFast(Message m, Topic topic) {
+	public void publishFast(Message m) {
 		// use series of UDP blocks (of size 508 bytes each, including internal header)
 		throw new UnsupportedOperationException("Not implemented yet!");
 		

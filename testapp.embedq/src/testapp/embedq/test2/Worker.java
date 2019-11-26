@@ -48,13 +48,13 @@ public abstract class Worker implements drcyano.embedq.client.Subscriber {
 		
 		
 		@Override
-		public void publishReliable(Message m, Topic topic) {
-			target.publishReliable(m,topic);
+		public void publishReliable(Message m) {
+			target.publishReliable(m);
 		}
 		
 		@Override
-		public void publishFast(Message m, Topic topic) {
-			target.publishFast(m, topic);
+		public void publishFast(Message m) {
+			target.publishFast(m);
 		}
 	}
 }

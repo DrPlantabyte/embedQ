@@ -36,13 +36,13 @@ public class Test1 {
 		
 		bc.subscribe(s1, new Topic("data/temperature"));
 		bc.subscribe(s2, new Topic("#"));
-		Message m = Message.fromString("20.2C");
-		bc.publishReliable(m, new Topic("data/temperature"));
-		bc.publishReliable(Message.fromString("996.2hPa"), new Topic("data/pressure"));
+		Message m = Message.fromString("20.2C", new Topic("data/temperature"));
+		bc.publishReliable(m);
+		bc.publishReliable(Message.fromString("996.2hPa", new Topic("data/pressure")));
 		bc.unsubscribeAll(s1);
-		bc.publishReliable(Message.fromString("20.4C"), new Topic("data/temperature"));
-		bc.publishReliable(Message.fromString("996.8hPa"), new Topic("data/pressure"));
+		bc.publishReliable(Message.fromString("20.4C", new Topic("data/temperature")));
+		bc.publishReliable(Message.fromString("996.8hPa", new Topic("data/pressure")));
 		bc.unsubscribe(s2,new Topic("#"));
-		bc.publishReliable(Message.fromString("996.0hPa"), new Topic("data/pressure"));
+		bc.publishReliable(Message.fromString("996.0hPa", new Topic("data/pressure")));
 	}
 }

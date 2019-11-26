@@ -8,7 +8,7 @@ import drcyano.embedq.data.Topic;
 public abstract class Broker {
 	public abstract BrokerConnection getConnection();
 	
-	public abstract void publishMessage(Topic pubTopic, Message messageBuffer);
+	public abstract void publishMessage(Message message);
 	
 	public abstract  void addSubscription(SourceConnection sourceConnection, Topic topic);
 	

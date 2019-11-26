@@ -25,7 +25,7 @@ public class Test2 {
 				int doughBalls = input.getBytes().getInt();
 				for(int i = 0; i < doughBalls; i++){
 					Thread.sleep(1000);
-					publisher.publishReliable(Message.fromString("Loaf of Bread"), new Topic("store/shelf"));
+					publisher.publishReliable(Message.fromString("Loaf of Bread", new Topic("store/shelf")));
 				}
 			}
 		};
@@ -38,7 +38,7 @@ public class Test2 {
 		bc.subscribe(logger, new Topic("#"));
 		
 		for(int i = 1; i <= 3; i++) {
-			bc.publishReliable(Message.fromInteger(i), new Topic("kitchen/dough"));
+			bc.publishReliable(Message.fromInteger(i, new Topic("kitchen/dough")));
 		}
 		//
 		try {

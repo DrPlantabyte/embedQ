@@ -18,35 +18,10 @@ public class SimpleBroker extends Broker {
 	@Override public BrokerConnection getConnection(){
 		return new IntraprocessBrokerConnection(this);
 	}
-	/*
-	@Override
-	public void receivePayload(Payload payload) {
-		PayloadType type = payload.getType();
-		switch (type){
-			case SUBSCRIBE:{
-				SubscribeEvent subEvent = PayloadManager.decodeSubscribeEvent(payload);
-				this.addSubscription(subEvent.getSourceConnection(), subEvent.getTopic());
-				break;
-			}
-			case UNSUBSCRIBE:{
-				UnsubscribeEvent subEvent = PayloadManager.decodeUnsubscribeEvent(payload);
-				this.removeSubscription(subEvent.getSourceConnection(), subEvent.getTopic());
-				break;
-			}
-			case PUBLISH:{
-				PublishEvent pubEvent = PayloadManager.decodePublishEvent(payload);
-				Topic pubTopic = pubEvent.getTopic();
-				ByteBuffer messageBuffer = pubEvent.getMessageData();
-				this.sendToSubscribers(pubTopic, messageBuffer);
-				break;
-			}
-			default:
-				throw new IllegalStateException("Unexpected payload type: "+type.name());
-		}
 	
-	}*/
 	
-	@Override public void publishMessage(final Topic pubTopic, final Message messageBuffer) {
+	@Override public void publishMessage(final Message messageBuffer) {
+		final Topic pubTopic = messageBuffer.getTopic();
 		subscribers
 				.keySet()
 				.stream()
