@@ -9,9 +9,7 @@ public class Topic implements Cloneable {
 	private final String[] levels;
 	private final int hashCache;
 	public Topic(String topicString) throws InvalidTopicStringException {
-		this.topicString = topicString;
-		this.hashCache = topicString.hashCode();
-		this.levels = validate(topicString);
+		this(topicString, true);
 	}
 	private Topic(String topicString, boolean validate) throws InvalidTopicStringException {
 		this.topicString = topicString;
@@ -26,6 +24,9 @@ public class Topic implements Cloneable {
 	private static final String[] validate(String topicString) throws InvalidTopicStringException {
 		if(topicString == null || topicString.length() == 0) {
 			throw new InvalidTopicStringException("Empty strings not allowed");
+		}
+		if(topicString.charAt(0) == '/') {
+			throw new InvalidTopicStringException("Topic string cannot start with a leading / (back-slash) character");
 		}
 		int indexOfMultiWildcard = topicString.indexOf('#');
 		if(indexOfMultiWildcard >= 0 && indexOfMultiWildcard < topicString.length() - 1) {

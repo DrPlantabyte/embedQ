@@ -32,13 +32,13 @@ public class Test2 {
 		Subscriber logger = new Subscriber() {
 			@Override
 			public void receiveMessage(Message m) {
-				System.out.println("Log: "+Message.toString(m));
+				System.out.println(m.getTopic()+": "+m.toString());
 			}
 		};
 		bc.subscribe(logger, new Topic("#"));
 		
 		for(int i = 1; i <= 3; i++) {
-			bc.publishReliable(Message.fromInteger(i, new Topic("kitchen/dough")));
+			bc.publishReliable(Message.fromInt(i, new Topic("kitchen/dough")));
 		}
 		//
 		try {

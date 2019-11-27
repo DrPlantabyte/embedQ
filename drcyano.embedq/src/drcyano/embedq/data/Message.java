@@ -1,12 +1,12 @@
 package drcyano.embedq.data;
 
+import drcyano.embedq.io.MessageOutputStream;
+
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public class Message {
 	private static final Charset UTF8 = StandardCharsets.UTF_8;
@@ -23,6 +23,59 @@ public class Message {
 		this.messageBuffer = data.asReadOnlyBuffer();
 	}
 	
+	
+	public static MessageOutputStream createMessageOutputStream(Topic topic){
+		return new MessageOutputStream(topic);
+	}
+	
+	public static Writer createMessageWriter(Topic topic){
+		return new OutputStreamWriter(createMessageOutputStream(topic), UTF8);
+	}
+	
+	
+	public static Message fromByte(byte i, Topic topic) {
+		ByteBuffer bb = ByteBuffer.allocate(1);
+		bb.put(i);
+		bb.flip();
+		return new Message(bb, topic);
+	}
+	
+	public static Message fromShort(short i, Topic topic) {
+		ByteBuffer bb = ByteBuffer.allocate(2);
+		bb.putShort(i);
+		bb.flip();
+		return new Message(bb, topic);
+	}
+	
+	public static Message fromInt(int i, Topic topic) {
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.putInt(i);
+		bb.flip();
+		return new Message(bb, topic);
+	}
+	
+	public static Message fromLong(long i, Topic topic) {
+		ByteBuffer bb = ByteBuffer.allocate(8);
+		bb.putLong(i);
+		bb.flip();
+		return new Message(bb, topic);
+	}
+	
+	public static Message fromFloat(float i, Topic topic) {
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.putFloat(i);
+		bb.flip();
+		return new Message(bb, topic);
+	}
+	
+	public static Message fromDouble(double i, Topic topic) {
+		ByteBuffer bb = ByteBuffer.allocate(8);
+		bb.putDouble(i);
+		bb.flip();
+		return new Message(bb, topic);
+	}
+	
+	
 	public static Message fromString(String s, Topic topic) {
 		return new Message(UTF8.encode(s), topic);
 	}
@@ -34,32 +87,23 @@ public class Message {
 		return new Message(bb, topic);
 	}
 	
-	public static Message fromInputStream(InputStream in, Topic topic) throws IOException {
-		// Reads until EOF, and then returns
-		int i;
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		while((i = in.read()) >= 0){
-			bout.write(i);
-		}
-		bout.close();
-		return new Message(ByteBuffer.wrap(bout.toByteArray()), topic);
+	public byte toByte(){return this.getBytes().get();}
+	public short toShort(){return this.getBytes().getShort();}
+	public int toInt(){return this.getBytes().getInt();}
+	public long toLong(){return this.getBytes().getLong();}
+	public float toFloat(){return this.getBytes().getFloat();}
+	public double toDouble(){return this.getBytes().getDouble();}
+	@Override public String toString() {
+		return UTF8.decode(this.getBytes()).toString();
 	}
+	public byte[] toByteArray(){return this.getBytes().array();}
 	
-	
-	public static Message fromInteger(int i, Topic topic) {
-		ByteBuffer bb = ByteBuffer.allocate(4);
-		bb.putInt(i);
-		bb.flip();
-		return new Message(bb, topic);
-	}
-	
-	public static String toString(Message m) {
-		return UTF8.decode(m.getBytes()).toString();
-	}
 	
 	public ByteBuffer getBytes() {
-		// Note: ByteBuffer is read-only
-		return messageBuffer.duplicate();
+		// Note: This ByteBuffer is read-only
+		ByteBuffer ref = messageBuffer.duplicate();
+		ref.rewind(); // set position to zero
+		return ref;
 	}
 	
 	public Topic getTopic(){
