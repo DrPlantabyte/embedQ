@@ -3,7 +3,13 @@ package drcyano.embedq.data;
 
 import drcyano.embedq.exceptions.InvalidTopicStringException;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 public class Topic implements Cloneable {
+	
+	private static final Charset UTF8 = StandardCharsets.UTF_8;
 	
 	private final String topicString;
 	private final String[] levels;
@@ -91,5 +97,9 @@ public class Topic implements Cloneable {
 	private static boolean compare(String a, String b){
 		if("+".equals(a) || "+".equals(b)) return true;
 		return a.equals(b);
+	}
+	
+	public ByteBuffer toUTF8Bytes() {
+		return UTF8.encode(this.topicString);
 	}
 }
