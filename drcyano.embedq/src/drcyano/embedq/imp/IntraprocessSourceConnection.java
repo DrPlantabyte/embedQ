@@ -15,8 +15,12 @@ public class IntraprocessSourceConnection extends SourceConnection {
 	}
 	
 	@Override
-	public void sendMessage(Message msg) {
+	public void sendMessageReliable(Message msg) {
 		src.receiveMessage(msg);
+	}
+	@Override
+	public void sendMessageFast(Message msg) {
+		this.sendMessageReliable(msg);
 	}
 	
 	@Override public int hashCode(){

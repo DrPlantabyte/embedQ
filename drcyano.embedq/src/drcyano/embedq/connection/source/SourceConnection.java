@@ -2,6 +2,8 @@ package drcyano.embedq.connection.source;
 
 import drcyano.embedq.data.Message;
 
+import java.io.IOException;
+
 public abstract class SourceConnection {
 	
 	private final String id;
@@ -10,7 +12,8 @@ public abstract class SourceConnection {
 		this.id = idString;
 	}
 	
-	public abstract void sendMessage(Message msg);
+	public abstract void sendMessageReliable(Message msg) throws IOException;
+	public abstract void sendMessageFast(Message msg) throws IOException;
 	
 	@Override public int hashCode(){
 		return id.hashCode();

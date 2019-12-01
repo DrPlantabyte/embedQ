@@ -20,7 +20,7 @@ public class IntraprocessBrokerConnection extends BrokerConnection {
 	
 	@Override public void publishReliable(Message m){
 		//Payload p = PayloadManager.encodePublishEvent(m, topic);
-		broker.publishMessage(m);
+		broker.publishMessageReliable(m);
 	}
 	
 	@Override public void publishFast(Message m){

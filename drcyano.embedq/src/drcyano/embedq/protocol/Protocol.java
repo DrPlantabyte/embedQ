@@ -1,4 +1,4 @@
-package protocol;
+package drcyano.embedq.protocol;
 
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
@@ -36,6 +36,14 @@ public class Protocol {
 	}
 	
 	public static Topic decodeSubscriberTopic(ByteBuffer buffer) {
+		throw new UnsupportedOperationException("not implemented yet");
+	}
+	
+	public static QualityOfService decodeQoS(ByteBuffer buffer) {
+		throw new UnsupportedOperationException("not implemented yet");
+	}
+	
+	public static int decodeUDPPort(ByteBuffer buffer) {
 		throw new UnsupportedOperationException("not implemented yet");
 	}
 }
