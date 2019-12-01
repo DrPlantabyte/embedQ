@@ -33,8 +33,21 @@ public class NetworkSourceConnection extends SourceConnection {
 		return newCon;
 	}
 	
+	@Override public int hashCode(){
+		return clientAddress.hashCode();
+	}
+	@Override public boolean equals(Object o){
+		if(o == this) return true;
+		if(o instanceof NetworkSourceConnection){
+			NetworkSourceConnection that = (NetworkSourceConnection)o;
+			if(this.channel == that.channel) return true;
+			return this.clientAddress.equals(that.clientAddress);;
+		}
+		return false;
+	}
+	
 	@Override
 	public void sendMessage(Message msg) {
-		channel.write()
+		throw new UnsupportedOperationException();
 	}
 }

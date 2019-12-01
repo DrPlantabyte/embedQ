@@ -6,33 +6,36 @@ import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
 import drcyano.embedq.imp.IntraprocessBrokerConnection;
 import drcyano.embedq.imp.NetworkSourceConnection;
+import protocol.PayloadType;
+import protocol.Protocol;
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SimpleBroker extends Broker {
 	
 	private final Map<Topic, Set<SourceConnection>> subscribers = new ConcurrentHashMap<Topic, Set<SourceConnection>>();
 	
-	private final Thread networkIOtThread;
-	private final List<AsynchronousServerSocketChannel> hostChannels = Collections.synchronizedList(new ArrayList<>());
-	private final List<AsynchronousSocketChannel> clientChannels = Collections.synchronizedList(new ArrayList<>());
-	private final AtomicBoolean runControl = new AtomicBoolean(true);
+	private final AsynchronousServerSocketChannel netServer;
+	private final Map<SourceConnection, AsynchronousSocketChannel> clientChannels;
 	
 	
 	public SimpleBroker() {
-		networkIOtThread = new Thread(this::handleNetworkIO);
-		networkIOtThread.setDaemon(true);
-		networkIOtThread.setName(SimpleBroker.class.getCanonicalName()+"$outbox-worker");
-		networkIOtThread.start();
+		netServer = null;clientChannels = null;
+	}
+	
+	public SimpleBroker(int networkPort) throws IOException {
+		InetSocketAddress hostAddress = new InetSocketAddress(networkPort);
+		netServer = AsynchronousServerSocketChannel.open();
+		netServer.bind(hostAddress);
+		netServer.accept("param", new ConnectCompletionHandler());
+		clientChannels = Collections.synchronizedMap(new HashMap<>());
 	}
 	
 	private void handleNetworkIO() {
@@ -122,4 +125,91 @@ public class SimpleBroker extends Broker {
 		}
 	}
 	
+	
+	private class ConnectCompletionHandler implements CompletionHandler<AsynchronousSocketChannel, String> {
+		
+		@Override
+		public void completed(AsynchronousSocketChannel socketChannel, String param) {
+			ByteBuffer buffer = ByteBuffer.allocate(0x10000); // TODO: figure out whether to put limit on payload size
+			socketChannel.read(buffer, buffer, new ReadCompletionHandler(socketChannel));
+			
+			// TODO
+			netServer.accept("param", this); // asynchronous looping
+		}
+		
+		@Override
+		public void failed(Throwable exc, String attachment) {
+		// TODO
+		}
+	}
+	
+	private class ReadCompletionHandler implements CompletionHandler<Integer, ByteBuffer>{
+		
+		private final AsynchronousSocketChannel socketChannel;
+		public ReadCompletionHandler(final AsynchronousSocketChannel channel){
+			this.socketChannel = channel;
+		}
+		
+		
+		@Override
+		public void completed(Integer result, ByteBuffer buffer) {
+			PayloadType type = Protocol.decodePayloadType(buffer);
+			switch (type){
+				case PUBLISH:{
+					Message m = Protocol.decodePayloadMessage(buffer);
+					publishMessage(m);
+					break;
+				}
+				
+				case SUBSCRIBE:{
+					Topic t = Protocol.decodeSubscriberTopic(buffer);
+					try {
+						SourceConnection src = NetworkSourceConnection.fromChannel(socketChannel);
+						addSubscription(src, t);
+					} catch (IOException e) {
+						failed(e, buffer);
+					}
+					break;
+				}
+				
+				case UNSUBSCRIBE:{
+					Topic t = Protocol.decodeSubscriberTopic(buffer);
+					try {
+						SourceConnection src = NetworkSourceConnection.fromChannel(socketChannel);
+						removeSubscriber(src, t);
+					} catch (IOException e) {
+						failed(e, buffer);
+					}
+					break;
+				}
+				case UNSUBSCRIBE_ALL:{
+					Topic t = Protocol.decodeSubscriberTopic(buffer);
+					// TODO
+					break;
+				}
+				default:
+					throw new IllegalStateException("Unexpected enum state: "+type.name());
+			}
+			// TODO
+			socketChannel.read(buffer, buffer, this); // async looping
+		}
+		
+		@Override
+		public void failed(Throwable exc, ByteBuffer attachment) {
+		
+		}
+	}
+	
+	private class WriteCompletionHandler implements CompletionHandler<AsynchronousSocketChannel, Message>{
+		
+		@Override
+		public void completed(AsynchronousSocketChannel socketChannel, Message param) {
+			// TODO
+		}
+		
+		@Override
+		public void failed(Throwable exc, Message attachment) {
+			// TODO
+		}
+	}
 }
