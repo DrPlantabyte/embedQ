@@ -6,10 +6,10 @@ import drcyano.embedq.protocol.Protocol;
 
 import java.io.IOException;
 import java.net.*;
-import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 public class NetworkSourceConnection extends SourceConnection {
 	
@@ -20,13 +20,15 @@ public class NetworkSourceConnection extends SourceConnection {
 	private final int brokerDatagramPort;
 	private final int clientDatagramPort;
 	private final DatagramSocket udpSocket;
+	private final BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler;
 	
-	protected NetworkSourceConnection(InetSocketAddress address, AsynchronousSocketChannel channel, final int clientUDP, final int hostUDP) throws SocketException {
+	protected NetworkSourceConnection(InetSocketAddress address, AsynchronousSocketChannel channel, final int clientUDP, final int hostUDP, BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler) throws SocketException {
 		super(String.format("%s#%s", address.getAddress().toString(), address.getPort()));
 		this.clientAddress = address;
 		this.channel = channel;
 		this.brokerDatagramPort = hostUDP;
 		this.clientDatagramPort = clientUDP;
+		this.connectionErrorHandler = connectionErrorHandler;
 		if(brokerDatagramPort > 0){
 			udpSocket = new DatagramSocket(brokerDatagramPort);
 		}else {
@@ -34,19 +36,19 @@ public class NetworkSourceConnection extends SourceConnection {
 		}
 	}
 	
-	public static NetworkSourceConnection fromChannel(final AsynchronousSocketChannel channel, final int clientUDP, final int hostUDP)
+	public static NetworkSourceConnection fromChannel(final AsynchronousSocketChannel channel, final int clientUDP, final int hostUDP, BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler)
 			throws IOException {
 		final SocketAddress address = channel.getRemoteAddress();
 		if(address instanceof InetSocketAddress == false){
 			throw new UnsupportedOperationException("Non-network sockets (sockets lacking an IP address and port number) are not supported by this class");
 		}
-		NetworkSourceConnection newCon = new NetworkSourceConnection((InetSocketAddress)address, channel, clientUDP, hostUDP);
+		NetworkSourceConnection newCon = new NetworkSourceConnection((InetSocketAddress)address, channel, clientUDP, hostUDP, connectionErrorHandler);
 		//
 		return newCon;
 	}
 	public static NetworkSourceConnection fromChannel(final AsynchronousSocketChannel channel)
 			throws IOException {
-		return fromChannel(channel, 0, 0); // no UDP support
+		return fromChannel(channel, 0, 0, null); // no UDP support
 	}
 	
 	@Override public int hashCode(){
@@ -64,7 +66,7 @@ public class NetworkSourceConnection extends SourceConnection {
 	
 	@Override
 	public void sendMessageReliable(Message msg) {
-		channel.write(Protocol.serializeMessageToBuffer(msg), msg, new WriteCompletionHandler());
+		channel.write(Protocol.serializeMessageToBuffer(msg), msg, new WriteCompletionHandler(connectionErrorHandler, channel));
 	}
 	@Override
 	public void sendMessageFast(Message msg) throws IOException {
@@ -79,7 +81,13 @@ public class NetworkSourceConnection extends SourceConnection {
 	}
 	
 	private static class WriteCompletionHandler implements CompletionHandler<Integer, Message>{
+		private final BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler;
+		private final AsynchronousSocketChannel channel;
 		
+		private WriteCompletionHandler(BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler, AsynchronousSocketChannel channel) {
+			this.connectionErrorHandler = connectionErrorHandler;
+			this.channel = channel;
+		}
 		
 		@Override
 		public void completed(Integer result, Message attachment) {
@@ -88,8 +96,11 @@ public class NetworkSourceConnection extends SourceConnection {
 		
 		@Override
 		public void failed(Throwable exc, Message attachment) {
-			// TODO
-			exc.printStackTrace(System.err);
+			if(connectionErrorHandler != null && exc instanceof Exception) {
+				connectionErrorHandler.accept((Exception) exc, channel);
+			} else {
+				exc.printStackTrace(System.err); // uh-oh, bad shit just happened!
+			}
 		}
 	}
 }
