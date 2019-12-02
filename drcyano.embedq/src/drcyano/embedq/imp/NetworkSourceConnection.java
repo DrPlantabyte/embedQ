@@ -69,14 +69,20 @@ public class NetworkSourceConnection extends SourceConnection {
 		channel.write(Protocol.serializeMessageToBuffer(msg), msg, new WriteCompletionHandler(connectionErrorHandler, channel));
 	}
 	@Override
-	public void sendMessageFast(Message msg) throws IOException {
+	public void sendMessageFast(Message msg) {
 		if(this.brokerDatagramPort <= 0){
 			// use TCP
 			sendMessageReliable(msg);
 		} else {
-			byte[] datagram = Protocol.serializeMessageToBuffer(msg).array();
-			DatagramPacket pk = new DatagramPacket(datagram, datagram.length, clientAddress.getAddress(), clientDatagramPort);
+			try {
+				byte[] datagram = Protocol.serializeMessageToBuffer(msg).array();
+				DatagramPacket pk = new DatagramPacket(datagram, datagram.length, clientAddress.getAddress(), clientDatagramPort);
 				udpSocket.send(pk);
+			}catch (IOException ex){
+				if(connectionErrorHandler != null){
+					connectionErrorHandler.accept(ex, udpChannel);
+				}
+			}
 		}
 	}
 	
