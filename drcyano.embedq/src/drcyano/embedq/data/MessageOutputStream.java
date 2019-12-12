@@ -89,7 +89,6 @@ public class MessageOutputStream extends ByteArrayOutputStream {
 	 * Writes the complete contents of the specified byte array
 	 * to this {@code ByteArrayOutputStream}.
 	 *
-	 * @apiNote
 	 * This method is equivalent to {@link #write(byte[],int,int)
 	 * write(b, 0, b.length)}.
 	 *

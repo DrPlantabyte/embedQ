@@ -30,16 +30,38 @@ public class Message {
 		this.messageBuffer = data.asReadOnlyBuffer();
 	}
 	
-	
+	/**
+	 * Creates a byte array output stream that can be converted into a <code>Message</code> instance
+	 * when you are done writing to it.
+	 * <p>
+	 * This method is good for conserving memory if the message is very large and you want to avoid
+	 * data duplication in RAM
+	 * @param topic Publish topic
+	 * @param initialBufferSize Initial size of memory buffer (expandable)
+	 * @return An <code>OutputStream</code> that can be converted into a <code>Message</code>
+	 */
+	public static MessageOutputStream createMessageOutputStream(Topic topic, int initialBufferSize){
+		return new MessageOutputStream(initialBufferSize, topic);
+	}
+	/**
+	 * Creates a byte array output stream that can be converted into a <code>Message</code> instance
+	 * when you are done writing to it.
+	 * <p>
+	 * This method is good for conserving memory if the message is very large and you want to avoid
+	 * data duplication in RAM
+	 * @param topic Publish topic
+	 * @return An <code>OutputStream</code> that can be converted into a <code>Message</code>
+	 */
 	public static MessageOutputStream createMessageOutputStream(Topic topic){
-		return new MessageOutputStream(topic);
+		return new MessageOutputStream( topic);
 	}
 	
-	public static Writer createMessageWriter(Topic topic){
-		return new OutputStreamWriter(createMessageOutputStream(topic), UTF8);
-	}
-	
-	
+	/**
+	 * Creates a one-byte message
+	 * @param i message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromByte(byte i, Topic topic) {
 		ByteBuffer bb = ByteBuffer.allocate(1);
 		bb.put(i);
@@ -47,6 +69,12 @@ public class Message {
 		return new Message(bb, topic);
 	}
 	
+	/**
+	 * Creates a short-int message
+	 * @param i message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromShort(short i, Topic topic) {
 		ByteBuffer bb = ByteBuffer.allocate(2);
 		bb.putShort(i);
@@ -54,6 +82,12 @@ public class Message {
 		return new Message(bb, topic);
 	}
 	
+	/**
+	 * Creates a single integer message
+	 * @param i message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromInt(int i, Topic topic) {
 		ByteBuffer bb = ByteBuffer.allocate(4);
 		bb.putInt(i);
@@ -61,6 +95,12 @@ public class Message {
 		return new Message(bb, topic);
 	}
 	
+	/**
+	 * Creates a long-int message
+	 * @param i message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromLong(long i, Topic topic) {
 		ByteBuffer bb = ByteBuffer.allocate(8);
 		bb.putLong(i);
@@ -68,6 +108,12 @@ public class Message {
 		return new Message(bb, topic);
 	}
 	
+	/**
+	 * Creates a single float message
+	 * @param i message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromFloat(float i, Topic topic) {
 		ByteBuffer bb = ByteBuffer.allocate(4);
 		bb.putFloat(i);
@@ -75,6 +121,12 @@ public class Message {
 		return new Message(bb, topic);
 	}
 	
+	/**
+	 * Creates a single double-precision floating point message
+	 * @param i message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromDouble(double i, Topic topic) {
 		ByteBuffer bb = ByteBuffer.allocate(8);
 		bb.putDouble(i);
@@ -83,10 +135,23 @@ public class Message {
 	}
 	
 	
+	/**
+	 * Creates a message from a String, encoding it as a UTF-8 byte array.
+	 * @param s message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromString(String s, Topic topic) {
 		return new Message(UTF8.encode(s), topic);
 	}
 	
+	/**
+	 * Creates a message with the provided binary content. A deep-copy will be made, so the provided
+	 * byte array can be re-used or discarded without affecting the message.
+	 * @param bytes message content
+	 * @param topic topic to publish to
+	 * @return a new <code>Message</code> instance
+	 */
 	public static Message fromByteArray(byte[] bytes, Topic topic) {
 		ByteBuffer bb = ByteBuffer.allocate(bytes.length);
 		bb.put(bytes); // moves the insert position of the byte buffer
@@ -94,17 +159,70 @@ public class Message {
 		return new Message(bb, topic);
 	}
 	
-	public byte toByte(){return this.getBytes().get();}
-	public short toShort(){return this.getBytes().getShort();}
-	public int toInt(){return this.getBytes().getInt();}
-	public long toLong(){return this.getBytes().getLong();}
-	public float toFloat(){return this.getBytes().getFloat();}
-	public double toDouble(){return this.getBytes().getDouble();}
+	/**
+	 * Utility method to more easily get the content of the message back in the original data type.
+	 * See {@link #fromByte(byte, Topic)}
+	 * @return Returns the message as a byte
+	 */
+	public byte toByte(){return this.getBytes().get(0);}
+	
+	/**
+	 * Utility method to more easily get the content of the message back in the original data type.
+	 * See {@link #fromShort(short, Topic)}
+	 * @return Returns the message as a short
+	 */
+	public short toShort(){return this.getBytes().getShort(0);}
+	
+	/**
+	 * Utility method to more easily get the content of the message back in the original data type.
+	 * See {@link #fromInt(int, Topic)}
+	 * @return Returns the message as an int
+	 */
+	public int toInt(){return this.getBytes().getInt(0);}
+	
+	/**
+	 * Utility method to more easily get the content of the message back in the original data type.
+	 * See {@link #fromLong(long, Topic)}
+	 * @return Returns the message as a long
+	 */
+	public long toLong(){return this.getBytes().getLong(0);}
+	
+	/**
+	 * Utility method to more easily get the content of the message back in the original data type.
+	 * See {@link #fromFloat(float, Topic)}
+	 * @return Returns the message as a float
+	 */
+	public float toFloat(){return this.getBytes().getFloat(0);}
+	
+	/**
+	 * Utility method to more easily get the content of the message back in the original data type.
+	 * See {@link #fromDouble(double, Topic)}
+	 * @return Returns the message as a double
+	 */
+	public double toDouble(){return this.getBytes().getDouble(0);}
+	
+	/**
+	 * Decodes the message to a String assuming that the message data is a UTF-8 byte array.
+	 * See {@link #fromString(String, Topic)}
+	 * @return Returns the message as a String, which may contain placeholder characters in case of
+	 * invalid unicode byte combinations int he message data
+	 */
 	@Override public String toString() {
 		return UTF8.decode(this.getBytes()).toString();
 	}
+	
+	/**
+	 * Gets the message content as a byte array. The byte array may be a copy of the message buffer
+	 * @return A byte-array containing the data
+	 */
 	public byte[] toByteArray(){return this.getBytes().array();}
 	
+	/**
+	 * Use this method instead of {@link #toString()} when debugging, as it will automatically convert
+	 * numbers to text without any prior knowledge of the message construction. This method may
+	 * mistake one type of data for another.
+	 * @return A human-readable String for debugging purposes
+	 */
 	public String heuristicToString() {
 		ByteBuffer bytes = getBytes();
 		int size = bytes.limit();
@@ -153,6 +271,10 @@ public class Message {
 		return UTF8.decode(this.getBytes()).toString();
 	}
 	
+	/**
+	 * Gets a read-only view of the message content
+	 * @return A read-only <code>ByteBuffer</code>
+	 */
 	public ByteBuffer getBytes() {
 		// Note: This ByteBuffer is read-only
 		ByteBuffer ref = messageBuffer.duplicate();
@@ -160,6 +282,11 @@ public class Message {
 		return ref;
 	}
 	
+	/**
+	 * Gets the topic that this message is published to. The Broker handles topic filtering, so this
+	 * method is included primarily for logging and debugging purposes.
+	 * @return The publication topic that this message was sent to.
+	 */
 	public Topic getTopic(){
 		return topic;
 	}
