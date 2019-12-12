@@ -14,6 +14,13 @@ public class Message {
 	private final ByteBuffer messageBuffer;
 	private final Topic topic;
 	
+	/**
+	 * Package-private constructor.
+	 * <b><u><i>DO NOT USE UNLESS YOU CAN GUARENTEE THAT THE BYTEBUFFER CANNOT BE MODIFIED FROM NOW ON!</i></u></b>
+	 * @param data A ByteBuffer whose data is assumed to be fixed (effective ownership transferred
+	 *               to this <code>Message</code> instance).
+	 * @param topic The topic to publish to
+	 */
 	Message(ByteBuffer data, Topic topic){ // package private
 		// WARNING: ByteBuffer is not thread safe!
 		// Message class is intended for use in multithreaded environment
