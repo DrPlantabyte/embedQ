@@ -17,38 +17,32 @@ public class NetworkSourceConnection extends SourceConnection {
 	
 	private final AsynchronousSocketChannel channel;
 	private final InetSocketAddress clientAddress;
-	private final int brokerDatagramPort;
-	private final int clientDatagramPort;
 	private final DatagramSocket udpSocket;
+	private final int clientDatagramPort;
 	private final BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler;
 	
-	protected NetworkSourceConnection(InetSocketAddress address, AsynchronousSocketChannel channel, final int clientUDP, final int hostUDP, BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler) throws SocketException {
+	protected NetworkSourceConnection(InetSocketAddress address, AsynchronousSocketChannel tcpChannel, BiConsumer<Exception, AsynchronousSocketChannel> tcpConnectionErrorHandler, DatagramSocket udpSendSocket, final int clientDatagramPort) {
 		super(String.format("%s#%s", address.getAddress().toString(), address.getPort()));
 		this.clientAddress = address;
-		this.channel = channel;
-		this.brokerDatagramPort = hostUDP;
-		this.clientDatagramPort = clientUDP;
-		this.connectionErrorHandler = connectionErrorHandler;
-		if(brokerDatagramPort > 0){
-			udpSocket = new DatagramSocket(brokerDatagramPort);
-		}else {
-			udpSocket = null;
-		}
+		this.channel = tcpChannel;
+		this.connectionErrorHandler = tcpConnectionErrorHandler;
+		this.udpSocket = udpSendSocket;
+		this.clientDatagramPort = clientDatagramPort;
 	}
 	
-	public static NetworkSourceConnection fromChannel(final AsynchronousSocketChannel channel, final int clientUDP, final int hostUDP, BiConsumer<Exception, AsynchronousSocketChannel> connectionErrorHandler)
+	public static NetworkSourceConnection fromChannel(final AsynchronousSocketChannel channel, BiConsumer<Exception, AsynchronousSocketChannel> tcpConnectionErrorHandler, DatagramSocket udpSendSocket, final int clientDatagramPort)
 			throws IOException {
 		final SocketAddress address = channel.getRemoteAddress();
 		if(address instanceof InetSocketAddress == false){
 			throw new UnsupportedOperationException("Non-network sockets (sockets lacking an IP address and port number) are not supported by this class");
 		}
-		NetworkSourceConnection newCon = new NetworkSourceConnection((InetSocketAddress)address, channel, clientUDP, hostUDP, connectionErrorHandler);
+		NetworkSourceConnection newCon = new NetworkSourceConnection((InetSocketAddress)address, channel, tcpConnectionErrorHandler, udpSendSocket, clientDatagramPort);
 		//
 		return newCon;
 	}
-	public static NetworkSourceConnection fromChannel(final AsynchronousSocketChannel channel)
+	public static NetworkSourceConnection fromChannel(final AsynchronousSocketChannel channel, final BiConsumer<Exception, AsynchronousSocketChannel> tcpConnectionErrorHandler)
 			throws IOException {
-		return fromChannel(channel, 0, 0, null); // no UDP support
+		return fromChannel(channel, tcpConnectionErrorHandler, null, 0); // no UDP support
 	}
 	
 	@Override public int hashCode(){
@@ -69,20 +63,14 @@ public class NetworkSourceConnection extends SourceConnection {
 		channel.write(Protocol.serializeMessageToBuffer(msg), msg, new WriteCompletionHandler(connectionErrorHandler, channel));
 	}
 	@Override
-	public void sendMessageFast(Message msg) {
-		if(this.brokerDatagramPort <= 0){
+	public void sendMessageFast(Message msg) throws IOException {
+		if(this.udpSocket == null){
 			// use TCP
 			sendMessageReliable(msg);
 		} else {
-			try {
 				byte[] datagram = Protocol.serializeMessageToBuffer(msg).array();
 				DatagramPacket pk = new DatagramPacket(datagram, datagram.length, clientAddress.getAddress(), clientDatagramPort);
 				udpSocket.send(pk);
-			}catch (IOException ex){
-				if(connectionErrorHandler != null){
-					connectionErrorHandler.accept(ex, udpChannel);
-				}
-			}
 		}
 	}
 	

@@ -8,6 +8,8 @@ import java.util.zip.CRC32;
 
 public class Protocol {
 	
+	private final static int headerSize = 4+8+4;
+	
 	public static long checksum(ByteBuffer buffer){
 		CRC32 checksummer = new CRC32();
 		checksummer.update(buffer);
@@ -44,6 +46,14 @@ public class Protocol {
 	}
 	
 	public static int decodeUDPPort(ByteBuffer buffer) {
+		throw new UnsupportedOperationException("not implemented yet");
+	}
+	
+	public static boolean isCompletePayload(ByteBuffer bb) {
+		// TODO: sanity check and see if the size of the content is equal to what is specified in the header
+		// this method is called after every byte is read, so keep it simple
+		int totalSize = bb.position();
+		if(totalSize < headerSize) return false;
 		throw new UnsupportedOperationException("not implemented yet");
 	}
 }

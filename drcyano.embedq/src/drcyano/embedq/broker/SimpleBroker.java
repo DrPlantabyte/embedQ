@@ -18,16 +18,25 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class SimpleBroker extends Broker {
 	
 	private final Map<Topic, Set<SourceConnection>> subscribers = new ConcurrentHashMap<Topic, Set<SourceConnection>>();
 	
 	private final AsynchronousServerSocketChannel netServer;
+	private final DatagramSocket udpListenSocket;
+	private final int remotePayloadSizeLimit = 0x10000;
+	private final Thread udpListenThread;
+	private final AtomicBoolean runControl = new AtomicBoolean(true);
 	
 	
 	public SimpleBroker() {
 		netServer = null;
+		udpListenSocket = null;
+		udpListenThread = null;
 	}
 	
 	public SimpleBroker(int networkPort) throws IOException {
@@ -35,37 +44,81 @@ public class SimpleBroker extends Broker {
 		netServer = AsynchronousServerSocketChannel.open();
 		netServer.bind(hostAddress);
 		netServer.accept("param", new ConnectCompletionHandler());
+		udpListenSocket = new DatagramSocket(networkPort);
+		udpListenThread = new Thread(this::udpListen);
+		udpListenThread.start();
 	}
 	
+	private void udpListen(){
+		final byte[] recvBuffer = new byte[remotePayloadSizeLimit];
+		while(runControl.get()){
+			DatagramPacket p = new DatagramPacket(recvBuffer, recvBuffer.length);
+			udpListenSocket.receive(p);
+			//
+			ByteBuffer buffer = ByteBuffer.wrap(recvBuffer);
+			PayloadType type = Protocol.decodePayloadType(buffer);
+			if(type != PayloadType.PUBLISH){
+				// UDP only allowed for fast publishing, not allowed for subscribe/unsubscribe operations
+				// ignore it
+			} else {
+				QualityOfService qos = QualityOfService.FAST;//Protocol.decodeQoS(buffer);
+				// TODO: see if QoS can be removed
+				Message m = Protocol.decodePayloadMessage(buffer);
+				switch (qos){
+					case FAST:{
+						publishMessageFast(m);
+						break;
+					}
+					case RELIABLE:{
+						publishMessageReliable(m);
+						break;
+					}
+					default:{
+						throw new IllegalStateException("Unexpected enum state: "+qos.name());
+					}
+				}
+			}
+		}
+	}
 	
 	
 	@Override public BrokerConnection getConnection(){
 		return new IntraprocessBrokerConnection(this);
 	}
 	
-	
-	@Override public void publishMessageReliable(final Message messageBuffer) {
-		final Topic pubTopic = messageBuffer.getTopic();
+	private Collection<SourceConnection> filterSubscribers(Topic pubTopic){
+		final List<SourceConnection> combined = new ArrayList<>();
 		subscribers
 				.keySet()
 				.stream()
 				.filter(pubTopic::matches)
 				.map(subscribers::get)
-				.forEach((Set<SourceConnection> set)->
-						set.stream()
-								.forEach((SourceConnection sub)->sub.sendMessageReliable(messageBuffer)));
+				.forEach(combined::addAll);
+		return combined;
+	}
+	
+	@Override public void publishMessageReliable(final Message messageBuffer) {
+		final Topic pubTopic = messageBuffer.getTopic();
+		for(SourceConnection src : filterSubscribers(pubTopic)) {
+			try{
+				src.sendMessageReliable(messageBuffer);
+			} catch (IOException ex){
+				// TODO: check if connection is still good, and clean it up if not
+				ex.printStackTrace(System.err);
+			}
+		}
 	}
 	
 	@Override public void publishMessageFast(final Message messageBuffer) {
 		final Topic pubTopic = messageBuffer.getTopic();
-		subscribers
-				.keySet()
-				.stream()
-				.filter(pubTopic::matches)
-				.map(subscribers::get)
-				.forEach((Set<SourceConnection> set)->
-						set.stream()
-								.forEach((SourceConnection sub)->sub.sendMessageFast(messageBuffer)));
+		for(SourceConnection src : filterSubscribers(pubTopic)) {
+			try{
+				src.sendMessageFast(messageBuffer);
+			} catch (IOException ex){
+				// TODO: check if connection is still good, and clean it up if not
+				ex.printStackTrace(System.err);
+			}
+		}
 	}
 	
 	@Override public synchronized void addSubscription(SourceConnection sourceConnection, Topic topic) {
@@ -94,7 +147,7 @@ public class SimpleBroker extends Broker {
 		
 		@Override
 		public void completed(AsynchronousSocketChannel socketChannel, String param) {
-			ByteBuffer buffer = ByteBuffer.allocate(0x10000); // TODO: figure out whether to put limit on payload size
+			ByteBuffer buffer = ByteBuffer.allocate(remotePayloadSizeLimit);
 			socketChannel.read(buffer, buffer, new ReadCompletionHandler(socketChannel));
 			netServer.accept("param", this); // asynchronous looping
 		}
