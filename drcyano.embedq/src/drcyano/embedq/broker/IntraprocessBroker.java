@@ -1,7 +1,7 @@
 package drcyano.embedq.broker;
 
 import drcyano.embedq.connection.BrokerConnection;
-import drcyano.embedq.connection.source.SourceConnection;
+import drcyano.embedq.connection.SourceConnection;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
 import drcyano.embedq.imp.IntraprocessBrokerConnection;
@@ -22,72 +22,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SimpleBroker extends Broker {
+/**
+ * This is a simple implementation of <code>Broker</code>. It acts as a message queue within this
+ * JVM instance and does not support any inter-process or remote communication
+ */
+public class IntraprocessBroker extends Broker {
 	
 	private final Map<Topic, Set<SourceConnection>> subscribers = new ConcurrentHashMap<Topic, Set<SourceConnection>>();
 	
-	private final AsynchronousServerSocketChannel netServer;
-	private final DatagramSocket udpListenSocket;
-	private final int remotePayloadSizeLimit = 0x10000;
-	private final Thread udpListenThread;
-	private final AtomicBoolean runControl = new AtomicBoolean(true);
-	
-	
-	public SimpleBroker() {
-		netServer = null;
-		udpListenSocket = null;
-		udpListenThread = null;
-	}
-	
-	public SimpleBroker(int networkPort) throws IOException {
-		InetSocketAddress hostAddress = new InetSocketAddress(networkPort);
-		netServer = AsynchronousServerSocketChannel.open();
-		netServer.bind(hostAddress);
-		netServer.accept("param", new ConnectCompletionHandler());
-		udpListenSocket = new DatagramSocket(networkPort);
-		udpListenThread = new Thread(this::udpListen);
-		udpListenThread.start();
-	}
-	
-	private void udpListen(){
-		final byte[] recvBuffer = new byte[remotePayloadSizeLimit];
-		while(runControl.get()){
-			DatagramPacket p = new DatagramPacket(recvBuffer, recvBuffer.length);
-			udpListenSocket.receive(p);
-			//
-			ByteBuffer buffer = ByteBuffer.wrap(recvBuffer);
-			PayloadType type = Protocol.decodePayloadType(buffer);
-			if(type != PayloadType.PUBLISH){
-				// UDP only allowed for fast publishing, not allowed for subscribe/unsubscribe operations
-				// ignore it
-			} else {
-				QualityOfService qos = QualityOfService.FAST;//Protocol.decodeQoS(buffer);
-				// TODO: see if QoS can be removed
-				Message m = Protocol.decodePayloadMessage(buffer);
-				switch (qos){
-					case FAST:{
-						publishMessageFast(m);
-						break;
-					}
-					case RELIABLE:{
-						publishMessageReliable(m);
-						break;
-					}
-					default:{
-						throw new IllegalStateException("Unexpected enum state: "+qos.name());
-					}
-				}
-			}
-		}
-	}
-	
-	
+	/**
+	 * Gets a new connection to this Broker, which enables you to add or remove subscribers to this
+	 * Broker
+	 * @return a <code>BrokerConnection</code> instance for intraprocess communication
+	 */
 	@Override public BrokerConnection getConnection(){
 		return new IntraprocessBrokerConnection(this);
 	}
 	
-	private Collection<SourceConnection> filterSubscribers(Topic pubTopic){
-		final List<SourceConnection> combined = new ArrayList<>();
+	/**
+	 * Publishes a message, relaying the message to all subscribers to the message's topic.
+	 * @param messageBuffer A message instance
+	 */
+	@Override public void publishMessage(final Message messageBuffer) {
+		final Topic pubTopic = messageBuffer.getTopic();
 		subscribers
 				.keySet()
 				.stream()
@@ -120,7 +77,14 @@ public class SimpleBroker extends Broker {
 			}
 		}
 	}
-	
+
+/**
+ * Adds a subscriber to this Broker. This method <b>will not be called directly by subscribers</b>,
+ * but by the <code>BrokerConnection</code> intermediary.
+ * @param sourceConnection A <code>SourceConnection</code> instance to transport the messages from
+ *                         the Broker to the Client
+ * @param topic The topic to listen for messages
+ * */
 	@Override public synchronized void addSubscription(SourceConnection sourceConnection, Topic topic) {
 		Set<SourceConnection> set;
 		if(subscribers.containsKey(topic) == false){
@@ -131,11 +95,24 @@ public class SimpleBroker extends Broker {
 		}
 		set.add(sourceConnection);
 	}
+	
+	/**
+	 * Tells the Broker to stop sending messages on the given topic to this <code>SourceConnection</code>
+	 * instance (in otherwords, unsubscribe this client from this topic)
+	 * @param sourceConnection A <code>SourceConnection</code> instance representing a Client
+	 * @param topic The topic to unsubscribe from
+	 */
 	@Override public synchronized void removeSubscription(SourceConnection sourceConnection, Topic topic) {
 		if(subscribers.containsKey(topic)){
 			boolean removed = subscribers.get(topic).remove(sourceConnection);
 		}
 	}
+	
+	/**
+	 * Tells the Broker to stop sending messages to a given client completely (unsubscribe from all
+	 * topics).
+	 * @param sourceConnection A <code>SourceConnection</code> instance representing a Client
+	 */
 	@Override public synchronized void removeSubscriber(SourceConnection sourceConnection) {
 		for(Set<SourceConnection> channel : subscribers.values()){
 			channel.remove(sourceConnection);

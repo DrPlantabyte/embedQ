@@ -1,6 +1,6 @@
 package drcyano.embedq.imp;
 
-import drcyano.embedq.connection.source.SourceConnection;
+import drcyano.embedq.connection.SourceConnection;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.protocol.Protocol;
 
