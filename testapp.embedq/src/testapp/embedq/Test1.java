@@ -1,7 +1,7 @@
 package testapp.embedq;
 
 import drcyano.embedq.broker.Broker;
-import drcyano.embedq.broker.SimpleBroker;
+import drcyano.embedq.broker.IntraprocessBroker;
 import drcyano.embedq.connection.BrokerConnection;
 import drcyano.embedq.client.Subscriber;
 import drcyano.embedq.data.Message;
@@ -14,35 +14,33 @@ public class Test1 {
 	
 	public static void main(String[] o){
 		// developer tests
-		Broker b = new SimpleBroker();
+		Broker b = new IntraprocessBroker();
 		BrokerConnection bc = b.getConnection();
-		Subscriber s1 = new Subscriber(){
-			@Override public void receiveMessage(Message msg){
+		Subscriber s1 = (Message msg)->{
 				ByteBuffer data = msg.getBytes();
 				String s = Charset.forName("UTF-8").decode(data).toString();
 				System.out.println("Temperature reading: "+s);
-			}
 		};
 		
 		
-		Subscriber s2 = new Subscriber(){
-			@Override public void receiveMessage(Message msg){
+		Subscriber s2 = (Message msg)->{
 				ByteBuffer data = msg.getBytes();
 				String s = Charset.forName("UTF-8").decode(data).toString();
 				System.out.println("Log: "+s);
-			}
 		};
 		
-		
-		bc.subscribe(s1, new Topic("data/temperature"));
-		bc.subscribe(s2, new Topic("#"));
+		Topic temperatureData = new Topic("data/temperature");
+		Topic pressureData = new Topic("data/pressure");
+		Topic all = new Topic("#");
+		bc.subscribe(s1, temperatureData);
+		bc.subscribe(s2, all);
 		Message m = Message.fromString("20.2C", new Topic("data/temperature"));
-		bc.publishReliable(m);
-		bc.publishReliable(Message.fromString("996.2hPa", new Topic("data/pressure")));
+		bc.publish(m);
+		bc.publish(Message.fromString("996.2hPa", pressureData));
 		bc.unsubscribeAll(s1);
-		bc.publishReliable(Message.fromString("20.4C", new Topic("data/temperature")));
-		bc.publishReliable(Message.fromString("996.8hPa", new Topic("data/pressure")));
+		bc.publish(Message.fromString("20.4C", temperatureData));
+		bc.publish(Message.fromString("996.8hPa", pressureData));
 		bc.unsubscribe(s2,new Topic("#"));
-		bc.publishReliable(Message.fromString("996.0hPa", new Topic("data/pressure")));
+		bc.publish(Message.fromString("996.0hPa", pressureData));
 	}
 }

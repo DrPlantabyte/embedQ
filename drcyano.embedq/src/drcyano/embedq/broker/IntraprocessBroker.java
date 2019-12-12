@@ -1,7 +1,7 @@
 package drcyano.embedq.broker;
 
 import drcyano.embedq.connection.BrokerConnection;
-import drcyano.embedq.connection.source.SourceConnection;
+import drcyano.embedq.connection.SourceConnection;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
 import drcyano.embedq.imp.IntraprocessBrokerConnection;
@@ -11,15 +11,27 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SimpleBroker extends Broker {
+/**
+ * This is a simple implementation of <code>Broker</code>. It acts as a message queue within this
+ * JVM instance and does not support any inter-process or remote communication
+ */
+public class IntraprocessBroker extends Broker {
 	
 	private final Map<Topic, Set<SourceConnection>> subscribers = new ConcurrentHashMap<Topic, Set<SourceConnection>>();
 	
+	/**
+	 * Gets a new connection to this Broker, which enables you to add or remove subscribers to this
+	 * Broker
+	 * @return a <code>BrokerConnection</code> instance for intraprocess communication
+	 */
 	@Override public BrokerConnection getConnection(){
 		return new IntraprocessBrokerConnection(this);
 	}
 	
-	
+	/**
+	 * Publishes a message, relaying the message to all subscribers to the message's topic.
+	 * @param messageBuffer A message instance
+	 */
 	@Override public void publishMessage(final Message messageBuffer) {
 		final Topic pubTopic = messageBuffer.getTopic();
 		subscribers
@@ -31,7 +43,14 @@ public class SimpleBroker extends Broker {
 						set.stream()
 								.forEach((SourceConnection sub)->sub.sendMessage(messageBuffer)));
 	}
-	
+
+/**
+ * Adds a subscriber to this Broker. This method <b>will not be called directly by subscribers</b>,
+ * but by the <code>BrokerConnection</code> intermediary.
+ * @param sourceConnection A <code>SourceConnection</code> instance to transport the messages from
+ *                         the Broker to the Client
+ * @param topic The topic to listen for messages
+ * */
 	@Override public synchronized void addSubscription(SourceConnection sourceConnection, Topic topic) {
 		Set<SourceConnection> set;
 		if(subscribers.containsKey(topic) == false){
@@ -42,11 +61,24 @@ public class SimpleBroker extends Broker {
 		}
 		set.add(sourceConnection);
 	}
+	
+	/**
+	 * Tells the Broker to stop sending messages on the given topic to this <code>SourceConnection</code>
+	 * instance (in otherwords, unsubscribe this client from this topic)
+	 * @param sourceConnection A <code>SourceConnection</code> instance representing a Client
+	 * @param topic The topic to unsubscribe from
+	 */
 	@Override public synchronized void removeSubscription(SourceConnection sourceConnection, Topic topic) {
 		if(subscribers.containsKey(topic)){
 			boolean removed = subscribers.get(topic).remove(sourceConnection);
 		}
 	}
+	
+	/**
+	 * Tells the Broker to stop sending messages to a given client completely (unsubscribe from all
+	 * topics).
+	 * @param sourceConnection A <code>SourceConnection</code> instance representing a Client
+	 */
 	@Override public synchronized void removeSubscriber(SourceConnection sourceConnection) {
 		for(Set<SourceConnection> channel : subscribers.values()){
 			channel.remove(sourceConnection);

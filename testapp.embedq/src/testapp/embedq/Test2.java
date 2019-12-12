@@ -1,13 +1,13 @@
 package testapp.embedq;
 
 import drcyano.embedq.broker.Broker;
-import drcyano.embedq.broker.SimpleBroker;
+import drcyano.embedq.broker.IntraprocessBroker;
 import drcyano.embedq.client.Publisher;
 import drcyano.embedq.client.Subscriber;
 import drcyano.embedq.connection.BrokerConnection;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
-import testapp.embedq.test2.Worker;
+import drcyano.embedq.util.Worker;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -15,7 +15,7 @@ import java.util.concurrent.Executors;
 public class Test2 {
 	
 	public static void main(String[] o){
-		Broker b = new SimpleBroker();
+		Broker b = new IntraprocessBroker();
 		BrokerConnection bc = b.getConnection();
 		ExecutorService threadPool = Executors.newFixedThreadPool(2);
 		Worker baker = new Worker(new Topic("kitchen/dough"), bc, threadPool, System.err::println) {
@@ -25,20 +25,20 @@ public class Test2 {
 				int doughBalls = input.getBytes().getInt();
 				for(int i = 0; i < doughBalls; i++){
 					Thread.sleep(1000);
-					publisher.publishReliable(Message.fromString("Loaf of Bread", new Topic("store/shelf")));
+					publisher.publish(Message.fromString("Loaf of Bread", new Topic("store/shelf")));
 				}
 			}
 		};
 		Subscriber logger = new Subscriber() {
 			@Override
 			public void receiveMessage(Message m) {
-				System.out.println(m.getTopic()+": "+m.toString());
+				System.out.println(m.getTopic()+": "+m.heuristicToString());
 			}
 		};
 		bc.subscribe(logger, new Topic("#"));
 		
 		for(int i = 1; i <= 3; i++) {
-			bc.publishReliable(Message.fromInt(i, new Topic("kitchen/dough")));
+			bc.publish(Message.fromInt(i, new Topic("kitchen/dough")));
 		}
 		//
 		try {
@@ -48,6 +48,4 @@ public class Test2 {
 		}
 		System.exit(0);
 	}
-	
-	
 }

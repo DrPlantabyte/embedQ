@@ -1,6 +1,7 @@
-package testapp.embedq.test2;
+package drcyano.embedq.util;
 
 import drcyano.embedq.client.Publisher;
+import drcyano.embedq.client.Subscriber;
 import drcyano.embedq.connection.BrokerConnection;
 import drcyano.embedq.data.Message;
 import drcyano.embedq.data.Topic;
@@ -8,7 +9,7 @@ import drcyano.embedq.data.Topic;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 
-public abstract class Worker implements drcyano.embedq.client.Subscriber {
+public abstract class Worker implements Subscriber {
 	
 	private final ExecutorService scheduler;
 	private final Publisher publisher;
@@ -25,36 +26,37 @@ public abstract class Worker implements drcyano.embedq.client.Subscriber {
 		brokerConnection.subscribe(this, listenTopic);
 	}
 	
+	@Override public String toString(){
+		return String.format("%s#%s << %s ", getClass().getName(), hashCode(), listenTopic.toString());
+	}
+	
 	protected abstract void doWork(Message input, Publisher publisher) throws Exception;
 	
-	private void workHandler(Message m){
+	private void workHandler(Message m) {
 		try {
 			doWork(m, publisher);
 		} catch (Exception e) {
-			if(exceptionHandler != null) exceptionHandler.accept(e);
+			if (exceptionHandler != null) exceptionHandler.accept(e);
 		}
 	}
 	
 	@Override
 	public void receiveMessage(Message m) {
-		scheduler.submit(()->workHandler(m));
+		scheduler.submit(() -> workHandler(m));
 	}
 	
-	private class PublisherWrapper implements Publisher{
+	private class PublisherWrapper implements Publisher {
 		private final Publisher target;
-		public PublisherWrapper(Publisher target){
+		
+		public PublisherWrapper(Publisher target) {
 			this.target = target;
 		}
 		
 		
 		@Override
-		public void publishReliable(Message m) {
-			target.publishReliable(m);
+		public void publish(Message m) {
+			target.publish(m);
 		}
 		
-		@Override
-		public void publishFast(Message m) {
-			target.publishFast(m);
-		}
 	}
 }

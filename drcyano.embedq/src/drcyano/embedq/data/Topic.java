@@ -49,7 +49,9 @@ public class Topic implements Cloneable {
 	
 	@Override public boolean equals(Object other){
 		if(this == other) return true;
-		if(this.hashCode() == other.hashCode() && other instanceof Topic){
+		if(this.hashCode() != other.hashCode()) return false;
+		//
+		if(other instanceof Topic){
 			Topic that = (Topic)other;
 			return this.topicString.equals(that.topicString);
 		}
